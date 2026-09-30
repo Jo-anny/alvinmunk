@@ -13,6 +13,7 @@ import { BorderBeam } from '@/components/fx/border-beam';
 import { AuroraText } from '@/components/fx/shiny-text';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { QrCode } from '@/components/fx/qr-code';
+import { ShareRow } from '@/components/fx/share-row';
 import { useWallet } from '@/components/wallet/wallet-provider';
 import { useTranslations } from '@/lib/i18n';
 import { saveInviteRef } from '@/lib/invite-ref';
@@ -69,7 +70,9 @@ export default function InvitePage({ params }: { params: { handle: string } }) {
 
   return (
     <div className="container max-w-lg py-16">
-      <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-primary/80">{'// you_are_invited'}</p>
+      <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-primary/80">
+        {'// you_are_invited'}
+      </p>
       <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight text-balance">
         @{handle} wants you in their <AuroraText>constellation.</AuroraText>
       </h1>
@@ -105,12 +108,30 @@ export default function InvitePage({ params }: { params: { handle: string } }) {
       </Frame>
 
       <div className="mt-6">
-        <span className="relative inline-flex overflow-hidden rounded-full">
-          <Link href="/app" className={cn(buttonVariants({ variant: 'flow', size: 'lg' }))}>
-            Create your profile <ArrowRight className="size-4" />
-          </Link>
-          <BorderBeam size={60} duration={6} colorTo="hsl(var(--tertiary))" />
-        </span>
+        {isOwner ? (
+          <div>
+            <p className="mb-3 font-mono text-xs uppercase tracking-wider text-muted-foreground">
+              Share your invite
+            </p>
+            <ShareRow
+              path={`/v/${handle}`}
+              text={`@${handle} invited you to their constellation on alvinmunk.`}
+            />
+          </div>
+        ) : profile ? (
+          address !== undefined && (
+            <Link href="/app/vouch" className={cn(buttonVariants({ variant: 'flow', size: 'lg' }))}>
+              Vouch @{handle} back <ArrowRight className="size-4" />
+            </Link>
+          )
+        ) : (
+          <span className="relative inline-flex overflow-hidden rounded-full">
+            <Link href="/app" className={cn(buttonVariants({ variant: 'flow', size: 'lg' }))}>
+              Create your profile <ArrowRight className="size-4" />
+            </Link>
+            <BorderBeam size={60} duration={6} colorTo="hsl(var(--tertiary))" />
+          </span>
+        )}
       </div>
 
       {isOwner && (

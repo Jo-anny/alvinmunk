@@ -19,6 +19,8 @@ export type HandleAvailability = 'idle' | 'checking' | 'free' | 'taken' | 'reser
 
 export interface UseCreateProfileOptions {
   from: CreateProfileSource;
+  /** Handle to prefill when onboarding was opened from an available profile link. */
+  initialHandle?: string;
   /** Chosen avatar face, if the caller offers a face picker. */
   face?: FaceId;
   /** Called once the profile is stored — created, or restored because the address already
@@ -64,16 +66,25 @@ export interface UseCreateProfileResult {
  * server-rendered marketing page, and a static import here would pull stellar-sdk into
  * that bundle (see the NOTE in `landing-onboard.tsx`).
  */
-export function useCreateProfile({ from, face, onCreated }: UseCreateProfileOptions): UseCreateProfileResult {
+export function useCreateProfile({
+  from,
+  face,
+  onCreated,
+  initialHandle,
+}: UseCreateProfileOptions): UseCreateProfileResult {
   const t = useTranslations();
   const { locale } = useLocale();
   const { wallet, connect, setProfile, restoreProfile } = useWallet();
-  const [handle, setHandle] = useState('');
+  const [handle, setHandle] = useState(() => normalizeHandle(initialHandle ?? ''));
   const [creating, setCreating] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [avail, setAvail] = useState<HandleAvailability>('idle');
   const [reservedUntil, setReservedUntil] = useState<string | null>(null);
   const normalizedHandle = normalizeHandle(handle);
+  useEffect(() => {
+    const nextHandle = normalizeHandle(initialHandle ?? '');
+    setHandle((current) => (current === nextHandle ? current : nextHandle));
+  }, [initialHandle]);
   // A handle its holder just released or renamed away from stays reserved for them for a
   // while; the connected wallet (if any) is asked about, since it may be that previous owner.
   const address = wallet?.address;
@@ -179,7 +190,20 @@ export function useCreateProfile({ from, face, onCreated }: UseCreateProfileOpti
     } finally {
       setCreating(false);
     }
-  }, [normalizedHandle, wallet, connect, setProfile, restoreProfile, welcomeBack, face, from, onCreated, t, day, messageKey]);
+  }, [
+    normalizedHandle,
+    wallet,
+    connect,
+    setProfile,
+    restoreProfile,
+    welcomeBack,
+    face,
+    from,
+    onCreated,
+    t,
+    day,
+    messageKey,
+  ]);
 
   const restoreAccount = useCallback(async () => {
     setRestoring(true);

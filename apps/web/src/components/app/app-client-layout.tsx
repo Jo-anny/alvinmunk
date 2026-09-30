@@ -1,5 +1,7 @@
 'use client';
 
+import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useWallet } from '@/components/wallet/wallet-provider';
 import { Onboarding } from '@/components/app/onboarding';
 import { AppShell } from '@/components/app/app-shell';
@@ -11,6 +13,17 @@ import { AppShell } from '@/components/app/app-shell';
  */
 export function AppClientLayout({ children }: { children: React.ReactNode }) {
   const { profile } = useWallet();
-  if (!profile) return <Onboarding />;
+  if (!profile) {
+    return (
+      <Suspense fallback={<Onboarding />}>
+        <OnboardingFromSearchParams />
+      </Suspense>
+    );
+  }
   return <AppShell>{children}</AppShell>;
+}
+
+function OnboardingFromSearchParams() {
+  const initialHandle = useSearchParams().get('handle') ?? undefined;
+  return <Onboarding initialHandle={initialHandle} />;
 }

@@ -11,21 +11,34 @@ import { asset } from '@/lib/assets';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-export function Onboarding() {
+export function Onboarding({ initialHandle }: { initialHandle?: string }) {
   const t = useTranslations();
   const [face, setFace] = useState<FaceId | undefined>();
-  const { handle, setHandle, avail, reservedUntil, creating, createProfile, restoring, restoreAccount } =
-    useCreateProfile({
-      from: 'app',
-      face,
-    });
+  const {
+    handle,
+    setHandle,
+    avail,
+    reservedUntil,
+    creating,
+    createProfile,
+    restoring,
+    restoreAccount,
+  } = useCreateProfile({
+    from: 'app',
+    face,
+    initialHandle,
+  });
 
   return (
     <div className="relative container flex max-w-md flex-col items-center gap-8 py-20">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-10 opacity-[0.05] [mask-image:radial-gradient(circle_at_top,black,transparent_70%)]"
-        style={{ backgroundImage: `url(${asset('backgrounds/app-bg.png')})`, backgroundSize: 'cover', backgroundPosition: 'top' }}
+        style={{
+          backgroundImage: `url(${asset('backgrounds/app-bg.png')})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'top',
+        }}
       />
       <div className="text-center">
         <p className="eyebrow mb-3">{t('onboard.eyebrow')}</p>
@@ -59,10 +72,27 @@ export function Onboarding() {
           aria-describedby="handle-status"
         />
         <p id="handle-status" aria-live="polite" className="h-4 text-xs">
-          {avail === 'checking' && <span className="text-muted-foreground">{t('onboard.checking')}</span>}
-          {avail === 'free' && <span className="text-secondary">{t('onboard.handleFree', { handle: normalizeHandle(handle) })}</span>}
-          {avail === 'taken' && <span className="text-destructive">{t('onboard.handleTaken', { handle: normalizeHandle(handle) })}</span>}
-          {avail === 'reserved' && reservedUntil && <span className="text-destructive">{t('onboard.handleReserved', { handle: normalizeHandle(handle), date: reservedUntil })}</span>}
+          {avail === 'checking' && (
+            <span className="text-muted-foreground">{t('onboard.checking')}</span>
+          )}
+          {avail === 'free' && (
+            <span className="text-secondary">
+              {t('onboard.handleFree', { handle: normalizeHandle(handle) })}
+            </span>
+          )}
+          {avail === 'taken' && (
+            <span className="text-destructive">
+              {t('onboard.handleTaken', { handle: normalizeHandle(handle) })}
+            </span>
+          )}
+          {avail === 'reserved' && reservedUntil && (
+            <span className="text-destructive">
+              {t('onboard.handleReserved', {
+                handle: normalizeHandle(handle),
+                date: reservedUntil,
+              })}
+            </span>
+          )}
         </p>
         <Button
           type="submit"

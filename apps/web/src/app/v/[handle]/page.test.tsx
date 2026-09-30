@@ -5,7 +5,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-const { resolveHandleMock } = vi.hoisted(() => ({ resolveHandleMock: vi.fn() }));
+const { resolveHandleMock, walletProfile } = vi.hoisted(() => ({
+  resolveHandleMock: vi.fn(),
+  walletProfile: { current: null as { address: string } | null },
+}));
 
 vi.mock('@/lib/registry', () => ({
   resolveHandle: resolveHandleMock,
@@ -14,7 +17,12 @@ vi.mock('@/lib/registry', () => ({
 vi.mock('@/lib/constellation', () => ({
   getPeopleCounts: () => Promise.resolve({ vouchedBy: 0, backed: 0 }),
 }));
-vi.mock('@/components/wallet/wallet-provider', () => ({ useWallet: () => ({ profile: null }) }));
+vi.mock('@/components/wallet/wallet-provider', () => ({
+  useWallet: () => ({ profile: walletProfile.current }),
+}));
+vi.mock('@/components/fx/share-row', () => ({
+  ShareRow: ({ path }: { path: string }) => <div data-testid="share-row" data-path={path} />,
+}));
 
 import InvitePage from './page';
 
@@ -27,6 +35,8 @@ describe('/v/[handle] invite ref', () => {
 
   beforeEach(() => {
     sessionStorage.clear();
+    walletProfile.current = null;
+    resolveHandleMock.mockReset();
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -72,5 +82,27 @@ describe('/v/[handle] invite ref', () => {
     resolveHandleMock.mockResolvedValue(null);
     await visit('nobody');
     expect(sessionStorage.getItem(KEY)).toBe('carol');
+  });
+
+  it('shows the share action instead of profile creation to the invite owner', async () => {
+    resolveHandleMock.mockResolvedValue(BOB);
+    walletProfile.current = { address: BOB };
+    await visit('bob');
+
+    expect(container.textContent).toContain('Share your invite');
+    expect(container.querySelector('[data-testid="share-row"]')?.getAttribute('data-path')).toBe(
+      '/v/bob',
+    );
+    expect(container.textContent).not.toContain('Create your profile');
+  });
+
+  it('offers a vouch-back action to a signed-in visitor', async () => {
+    resolveHandleMock.mockResolvedValue(BOB);
+    walletProfile.current = { address: 'G'.padEnd(56, 'A') };
+    await visit('bob');
+
+    const action = container.querySelector<HTMLAnchorElement>('a[href="/app/vouch"]');
+    expect(action?.textContent).toContain('Vouch @bob back');
+    expect(container.textContent).not.toContain('Create your profile');
   });
 });
