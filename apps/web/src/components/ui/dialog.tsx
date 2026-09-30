@@ -30,7 +30,12 @@ export function Dialog({ open, onClose, labelledBy, children, className }: Dialo
   useEffect(() => {
     if (!open) return;
     const previous = document.activeElement as HTMLElement | null;
-    const focusables = () => [...(contentRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [])];
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.dispatchEvent(new Event('app:lenis-stop'));
+    const focusables = () => [
+      ...(contentRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []),
+    ];
     (focusables()[0] ?? contentRef.current)?.focus();
 
     const onKeyDown = (e: KeyboardEvent) => {
@@ -59,6 +64,8 @@ export function Dialog({ open, onClose, labelledBy, children, className }: Dialo
     document.addEventListener('keydown', onKeyDown);
     return () => {
       document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      window.dispatchEvent(new Event('app:lenis-start'));
       previous?.focus?.();
     };
   }, [open]);
@@ -67,7 +74,7 @@ export function Dialog({ open, onClose, labelledBy, children, className }: Dialo
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      className="fixed inset-0 z-50 flex justify-center overflow-y-auto bg-black/60 p-4"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -78,7 +85,11 @@ export function Dialog({ open, onClose, labelledBy, children, className }: Dialo
         aria-modal="true"
         aria-labelledby={labelledBy}
         tabIndex={-1}
-        className={cn('w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-lg outline-none', className)}
+        data-lenis-prevent
+        className={cn(
+          'my-auto max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto overscroll-contain rounded-2xl border border-border bg-card p-6 shadow-lg outline-none',
+          className,
+        )}
       >
         {children}
       </div>

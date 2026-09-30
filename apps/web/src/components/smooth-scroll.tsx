@@ -18,6 +18,10 @@ export function SmoothScroll() {
       wheelMultiplier: 1,
       touchMultiplier: 1.4,
     });
+    const stop = () => lenis.stop();
+    const start = () => lenis.start();
+    window.addEventListener('app:lenis-stop', stop);
+    window.addEventListener('app:lenis-start', start);
 
     let raf = 0;
     const loop = (time: number) => {
@@ -28,6 +32,8 @@ export function SmoothScroll() {
 
     return () => {
       cancelAnimationFrame(raf);
+      window.removeEventListener('app:lenis-stop', stop);
+      window.removeEventListener('app:lenis-start', start);
       lenis.destroy();
     };
   }, []);
