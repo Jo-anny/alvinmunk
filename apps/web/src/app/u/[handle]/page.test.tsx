@@ -19,9 +19,7 @@ const m = vi.hoisted(() => ({
 vi.mock('@/lib/registry', () => ({ resolveHandle: m.resolveHandle, getMeta: m.getMeta }));
 vi.mock('@/lib/reputation', () => ({ getScores: m.getScores }));
 vi.mock('@/lib/constellation', () => ({ getPeopleCounts: m.getPeopleCounts }));
-vi.mock('@/components/wallet/wallet-provider', () => ({
-  useWallet: () => ({ profile: m.profile }),
-}));
+vi.mock('@/components/wallet/wallet-provider', () => ({ useWallet: () => ({ profile: m.profile }) }));
 vi.mock('@/lib/i18n', () => ({ useTranslations: () => (k: string) => k }));
 // lib/read-network decides what an override is (tested there); here `testnet` is one.
 vi.mock('@/lib/read-network', () => ({
@@ -88,13 +86,7 @@ describe('/u/[handle] on a ?network= override (#290)', () => {
     expect(container.textContent).toContain('4'); // earned XP from the override's read
     // The vouch network reads the same network, with the override's counts.
     expect(m.vouchNetwork).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        address: G,
-        handle: 'umut',
-        net: m.net,
-        vouchedByCount: 3,
-        backedCount: 1,
-      }),
+      expect.objectContaining({ address: G, handle: 'umut', net: m.net, vouchedByCount: 3, backedCount: 1 }),
     );
   });
 
@@ -111,15 +103,16 @@ describe('/u/[handle] on a ?network= override (#290)', () => {
   it('offers no claim link for a handle nobody held on the override network', async () => {
     m.resolveHandle.mockResolvedValue(null);
     await render({ network: 'testnet' });
-    expect(q('a[href="/app"]')).toBeNull();
+    expect(q('a[href^="/app"]')).toBeNull();
     expect(container.textContent).toContain('Nobody held this handle on testnet');
   });
 
-  it('passes an unclaimed handle into onboarding', async () => {
+  it('claims an unclaimed handle with onboarding prefilled to it (#485)', async () => {
     m.resolveHandle.mockResolvedValue(null);
     await render();
-
-    expect(q('a[href="/app?handle=umut"]')?.textContent).toBe('Claim @umut');
+    const claim = q('a[href^="/app"]');
+    expect(claim?.getAttribute('href')).toBe('/app?handle=umut');
+    expect(claim?.textContent).toBe('Claim @umut');
   });
 
   it('is the normal profile without the override', async () => {
@@ -128,9 +121,7 @@ describe('/u/[handle] on a ?network= override (#290)', () => {
     expect(q('[role="status"]')).toBeNull();
     expect(q('a[href="/app"]')?.textContent).toContain('Vouch @umut');
     expect(q('[data-testid="badges"]')).not.toBeNull();
-    expect(m.vouchNetwork).toHaveBeenLastCalledWith(
-      expect.objectContaining({ net: null, isMe: false }),
-    );
+    expect(m.vouchNetwork).toHaveBeenLastCalledWith(expect.objectContaining({ net: null, isMe: false }));
     expect(q('[data-testid="share"]')?.getAttribute('data-path')).toBe('/u/umut');
   });
 });

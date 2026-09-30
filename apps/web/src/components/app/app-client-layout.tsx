@@ -14,16 +14,18 @@ import { AppShell } from '@/components/app/app-shell';
 export function AppClientLayout({ children }: { children: React.ReactNode }) {
   const { profile } = useWallet();
   if (!profile) {
+    // Suspense keeps /app static: the server renders the empty form, the client the prefilled one.
     return (
       <Suspense fallback={<Onboarding />}>
-        <OnboardingFromSearchParams />
+        <OnboardingFromUrl />
       </Suspense>
     );
   }
   return <AppShell>{children}</AppShell>;
 }
 
-function OnboardingFromSearchParams() {
+/** `/app?handle=<x>` — the "Claim @x" link on an unclaimed `/u/<x>` — prefills the picker. */
+function OnboardingFromUrl() {
   const initialHandle = useSearchParams().get('handle') ?? undefined;
   return <Onboarding initialHandle={initialHandle} />;
 }

@@ -19,7 +19,8 @@ export type HandleAvailability = 'idle' | 'checking' | 'free' | 'taken' | 'reser
 
 export interface UseCreateProfileOptions {
   from: CreateProfileSource;
-  /** Handle to prefill when onboarding was opened from an available profile link. */
+  /** Handle to start with (normalized), e.g. the one a "Claim @x" link on `/u/<x>` carries.
+   *  Read once on mount; its availability check starts right away. */
   initialHandle?: string;
   /** Chosen avatar face, if the caller offers a face picker. */
   face?: FaceId;
@@ -81,10 +82,6 @@ export function useCreateProfile({
   const [avail, setAvail] = useState<HandleAvailability>('idle');
   const [reservedUntil, setReservedUntil] = useState<string | null>(null);
   const normalizedHandle = normalizeHandle(handle);
-  useEffect(() => {
-    const nextHandle = normalizeHandle(initialHandle ?? '');
-    setHandle((current) => (current === nextHandle ? current : nextHandle));
-  }, [initialHandle]);
   // A handle its holder just released or renamed away from stays reserved for them for a
   // while; the connected wallet (if any) is asked about, since it may be that previous owner.
   const address = wallet?.address;
@@ -190,20 +187,7 @@ export function useCreateProfile({
     } finally {
       setCreating(false);
     }
-  }, [
-    normalizedHandle,
-    wallet,
-    connect,
-    setProfile,
-    restoreProfile,
-    welcomeBack,
-    face,
-    from,
-    onCreated,
-    t,
-    day,
-    messageKey,
-  ]);
+  }, [normalizedHandle, wallet, connect, setProfile, restoreProfile, welcomeBack, face, from, onCreated, t, day, messageKey]);
 
   const restoreAccount = useCallback(async () => {
     setRestoring(true);

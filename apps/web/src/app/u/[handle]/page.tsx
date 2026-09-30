@@ -106,12 +106,10 @@ export default function ProfilePage({
               </p>
             ) : (
               <>
-                <p className="font-mono text-xs uppercase tracking-wider text-secondary">
-                  available
-                </p>
+                <p className="font-mono text-xs uppercase tracking-wider text-secondary">available</p>
                 <p className="text-sm text-muted-foreground text-balance">
-                  This handle isn&apos;t claimed yet. Open the app, pick it, and it stamps to chain
-                  as your profile ID.
+                  This handle isn&apos;t claimed yet. Open the app, pick it, and it stamps to chain as
+                  your profile ID.
                 </p>
                 <Link
                   href={`/app?handle=${encodeURIComponent(handle)}`}
@@ -204,17 +202,10 @@ function Field({
   value?: number;
   accent: 'primary' | 'secondary' | 'tertiary';
 }) {
-  const c =
-    accent === 'primary'
-      ? 'text-primary'
-      : accent === 'secondary'
-        ? 'text-secondary'
-        : 'text-tertiary';
+  const c = accent === 'primary' ? 'text-primary' : accent === 'secondary' ? 'text-secondary' : 'text-tertiary';
   return (
     <div className="p-5">
-      <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-        {label}
-      </p>
+      <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
       {value === undefined ? (
         <Skeleton className="mt-2 h-8 w-12" />
       ) : (
